@@ -8,3 +8,36 @@ class BalancePredictor:
         self.tracker = tracker
         # Will hold the trained ML model
         self.model = None
+
+        #Main Prediction Method
+        #get historical daily balances from the tracker
+        dates, balances = self.tracker.get_daily_balances()
+        
+        if len(dates) < 2:
+            print("Need at least 2 days of data for predictions")
+            return None
+        
+        #convert day numbers to numpy array
+        X = np.array(range(len(dates))).reshape(-1,1)
+        #convert balances to numpy array
+        y = np.array(balances)
+
+        #Training the ML Model
+        self.model = LinearRegression()
+        #Train the model on historical data
+        self.model.fit(X, y)
+
+        #Generate Future Predictions
+        #create day numbers for future days
+        future_day_numbers = range(len(dates), len(dates) + days_ahead)
+        #convert to numpy array in correct format
+        X_future = np.array(future_day_numbers).reshape(-1,1)
+        predictions = self.model.predict(X_future)
+
+        #Convert Day Numbers Back to Actual Dates
+        last_date = dates[-1]
+
+        #generate actual calendar dates for the future
+        future_dates = [last_date + timedelta(days=i+1) for i in range(days_ahead)]
+
+        return future_dates, predictions, dates, balances
