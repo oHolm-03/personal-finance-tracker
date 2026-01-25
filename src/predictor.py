@@ -9,7 +9,7 @@ class BalancePredictor:
         # Will hold the trained ML model
         self.model = None
 
-        #Main Prediction Method
+        #MAIN PREDICTION METHOD
         #get historical daily balances from the tracker
         dates, balances = self.tracker.get_daily_balances()
         
@@ -41,3 +41,26 @@ class BalancePredictor:
         future_dates = [last_date + timedelta(days=i+1) for i in range(days_ahead)]
 
         return future_dates, predictions, dates, balances
+
+    #HELPER METHOD- to get information about the trend
+    def get_trend_info(self):
+        if self.model is None:
+            #train model with 1 day prediction to initialize
+            self.predict_future_balance(1)
+
+        #Double check if model exists
+        if self.model is None:
+            return None
+    
+        #get slop from the trained model
+        daily_change = self.model.coef_[0]
+
+        #determine if user is saving or spending
+        trend_direction = 'saving' if daily_change > 0 else 'spending'
+        monthly_change = daily_change *30
+
+        return{
+            'Daily Change': daily_change,
+            'Trend Direction': trend_direction,
+            'Monthly Change': monthly_change
+        }
