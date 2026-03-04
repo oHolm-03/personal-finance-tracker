@@ -1,0 +1,35 @@
+/* Custom styles for Finance Tracker */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+/* Make stat cards stand out */
+.bg-primary h2,
+.bg-success h2,
+.bg-danger h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* Table styling */
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Finance Tracker{% endblock %}
+
+{% block content %}
+
+<!-- Statistics Cards - shows balance, income, expenses-->
+<div class="row mb-4">
+    <!-- Current Balance Card -->
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-wallet"></i>Current Balance
+                </h5>
+                <h2 class="card-text">
+                    ${{"{:,.2f}".format(stats.balance)}}
+                </h2>
+            </div>
+        </div>
+    </div>
+
+     <!-- Total Income Card -->
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-arrow-up"></i>Total Income
+                </h5>
+                <h2 class="card-text">
+                    ${{"{:,.2f}".format(stats.total_income)}}
+                </h2>
+            </div>
+        </div>
+    </div>  
+
+    <!-- Total Expenses Card -->
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-arrow-down"></i>Total Expenses
+                </h5>
+                <h2 class="card-text">
+                    ${{"{:,.2f}".format(stats.total_expenses)}}
+                </h2>
+            </div>
+        </div>
+     </div>
+
+
+<!-- Add Transaction Form-->
+
+
+</div>
