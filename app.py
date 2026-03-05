@@ -61,7 +61,7 @@ def predictions():
 
         prediction_trace = go.Scatter(
             x=future_dates,
-            y='predictions',
+            y=predictions,
             mode='lines',
             name='Predicted Balance',
             line=dict(color='red', width=2, dash='dash')
@@ -79,39 +79,50 @@ def predictions():
 
         fig = go.Figure(data=data, layout=layout)
 
-        chat_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
         return render_template('predictions.html', chart_json=chart_json, trend_info=trend_info, days=days)
     
-    @app.route('/analytics')
-    def analytics():
-        stats = tracker.get_summary_stats()
+@app.route('/analytics')
+def analytics():
+    stats = tracker.get_summary_stats()
 
-        data = [
-            go.Bar(
-                x=['Income', 'Expenses'],
-                y=[stats['total_income'], stats['total_expenses']],
-                marker=dict(color=['green', 'red']),
-                text=[f"${stats['total_income']:,.2f}", f"${stats['total_expenses']:,.2f}"],
-                textposition='outside'
-            )
-        ]
-
-        layout = go.Layout(
-            title='Income vs Expenses',
-            yaxis=dict(title='Amount ($)'),
-            template='plotly_white'
+    data = [
+        go.Bar(
+            x=['Income', 'Expenses'],
+            y=[stats['total_income'], stats['total_expenses']],
+            marker=dict(color=['green', 'red']),
+            text=[f"${stats['total_income']:,.2f}", f"${stats['total_expenses']:,.2f}"],
+            textposition='outside'
         )
+    ]
 
-        fig = go.Figure(data=data, layout=layout)
-        chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    layout = go.Layout(
+        title='Income vs Expenses',
+        yaxis=dict(title='Amount ($)'),
+        template='plotly_white'
+    )
 
-        return render_template('analytics.html', chart_json=chart_json, stats=stats)
+    fig = go.Figure(data=data, layout=layout)
+    chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return render_template('analytics.html', chart_json=chart_json, stats=stats)
     
-    @app.route('/delete_transaction/<int:index>')
-    def delete_transaction(index):
-        if 0 <= index < len(tracker.transactions):
-            tracker.transactions.pop(index)
-            tracker.save_data()
+@app.route('/delete_transaction/<int:index>')
+def delete_transaction(index):
+    if 0 <= index < len(tracker.transactions):
+        tracker.transactions.pop(index)
+        tracker.save_data()
 
-            return redirect(url_for('index'))
+        return redirect(url_for('index'))
+    
+# Run the server
+if __name__ == '__main__':
+    print("\n" + "="*60)
+    print("Starting Personal Finance Tracker Web App")
+    print("="*60)
+    print("Open your browser and go to: http://localhost:5000")
+    print("Press CTRL+C to stop the server")
+    print("="*60 + "\n")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000)
