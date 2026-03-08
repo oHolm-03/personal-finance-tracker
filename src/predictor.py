@@ -10,6 +10,7 @@ class BalancePredictor:
         self.model = None
 
         #MAIN PREDICTION METHOD
+    def predict_future_balance(self, days_ahead = 30):
         #get historical daily balances from the tracker
         dates, balances = self.tracker.get_daily_balances()
         

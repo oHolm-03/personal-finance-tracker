@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Predictions - PocketPilot{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-crystal-ball"></i> Balance Predictions</h2>
+        <p class="text-muted">Machine learning predictions based on your spending patterns</p>
+    </div>
+</div>
+
+{% if chart_json %}
+    <!-- Trend Information Cards-->
+     {% if trend_info %}
+     <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white {% if trend_info.trend_direction == 'saving' %}bg-success{% else %}bg-danger(% endif %)">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line"></i> Trend
+                    </h5>
+                    <h3>{{ trend_info.trend_direction|capitalize }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-calendar-day"></i> Daily Change
+                    </h5>
+                    <h3>${{ "%.2f"|format(trend_info.daily_change) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-calendar-alt"></i> Monthly Change
+                    </h5>
+                    <h3>${{ "%.2f"|format(trend_info.monthly_change) }}</h3>
+                </div>
+            </div>
+        </div>
+     </div>
+     {% endif %}
+
+     <!-- Prediction Chart-->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area"></i> {{ days }}-Day Prediction
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="predictionChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prediction Controls-->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Adjust Prediction Period</h5>
+                    <form method="GET" action="/predictions" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="days" class="form-label">Number of Days</label>
+                            <input type="number" class="form-control" id="days" name="days"
+                                value="{{ days }}" min="7" max="365">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-sync"></i> Update Predictions
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    <!-- No Data Message -->
+     <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle"></i> Insufficient Data
+                </h4>
+                <p>You need at least 2 days of transaction data to generate predictions.</p>
+                <hr>
+                <p class="mb-0">Add some transactions on the <a href="/" class="alert-link">Dashboard</a> and come back tomorrow to see your predictions!</p>
+            </div>
+        </div>
+     </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if chart_json %}
+<script>
+    //render the plotly chart
+    var chartData = JSON.parse('{{ chart_json | safe }}');
+    Plotly.newPlot('predictionChart', chartData.data, chartData.layout, {responsive: true});
+</script>
+{% endif %}
+{% endblock %}

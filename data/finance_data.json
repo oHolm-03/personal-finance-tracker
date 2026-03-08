@@ -1,0 +1,26 @@
+[
+  {
+    "date": "2026-03-06 12:31:05",
+    "type": "expense",
+    "amount": 30.0,
+    "description": "Gas"
+  },
+  {
+    "date": "2026-03-06 12:31:14",
+    "type": "income",
+    "amount": 300.0,
+    "description": "Paycheck"
+  },
+  {
+    "date": "2026-03-06 16:38:26",
+    "type": "expense",
+    "amount": 16.0,
+    "description": "Golf"
+  },
+  {
+    "date": "2026-03-08 13:45:03",
+    "type": "expense",
+    "amount": 50.0,
+    "description": "Night out"
+  }
+]
