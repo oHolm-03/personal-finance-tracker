@@ -22,5 +22,11 @@
     "type": "expense",
     "amount": 50.0,
     "description": "Night out"
+  },
+  {
+    "date": "2026-03-10 13:48:58",
+    "type": "expense",
+    "amount": 185.96,
+    "description": "Gas bill"
   }
 ]

@@ -15,7 +15,7 @@
      {% if trend_info %}
      <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card text-white {% if trend_info.trend_direction == 'saving' %}bg-success{% else %}bg-danger(% endif %)">
+            <div class="card text-white {% if trend_info.trend_direction == 'saving' %}bg-success{% else %}bg-danger{% endif %}">
                 <div class="card-body">
                     <h5 class="card-title">
                         <i class="fas fa-chart-line"></i> Trend
@@ -103,7 +103,7 @@
             </div>
         </div>
      </div>
-{% endif %}
+     {% endif %}
 {% endblock %}
 
 {% block extra_js %}

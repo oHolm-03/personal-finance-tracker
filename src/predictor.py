@@ -61,7 +61,7 @@ class BalancePredictor:
         monthly_change = daily_change *30
 
         return{
-            'Daily Change': daily_change,
-            'Trend Direction': trend_direction,
-            'Monthly Change': monthly_change
+            'daily_change': daily_change,
+            'trend_direction': trend_direction,
+            'monthly_change': monthly_change
         }
