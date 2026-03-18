@@ -28,5 +28,41 @@
     "type": "expense",
     "amount": 185.96,
     "description": "Gas bill"
+  },
+  {
+    "date": "2026-03-11 21:28:53",
+    "type": "income",
+    "amount": 900.0,
+    "description": "transfer"
+  },
+  {
+    "date": "2026-03-11 21:29:11",
+    "type": "expense",
+    "amount": 720.0,
+    "description": "Credit Card Bill"
+  },
+  {
+    "date": "2026-03-15 13:58:58",
+    "type": "income",
+    "amount": 458.89,
+    "description": "Paycheck"
+  },
+  {
+    "date": "2026-03-15 13:59:20",
+    "type": "expense",
+    "amount": 15.79,
+    "description": "Breakfast"
+  },
+  {
+    "date": "2026-03-15 13:59:33",
+    "type": "expense",
+    "amount": 55.0,
+    "description": "Groceries"
+  },
+  {
+    "date": "2026-03-18 11:17:29",
+    "type": "expense",
+    "amount": 45.0,
+    "description": "Lyft"
   }
 ]

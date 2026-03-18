@@ -13,6 +13,11 @@ class BalancePredictor:
     def predict_future_balance(self, days_ahead = 30):
         #get historical daily balances from the tracker
         dates, balances = self.tracker.get_daily_balances()
+
+        # DEBUG: Print what we got=============================================================
+        print(f"DEBUG - Dates: {dates}")
+        print(f"DEBUG - Balances: {balances}")
+        print(f"DEBUG - Last balance: {balances[-1] if balances else 'EMPTY'}")
         
         if len(dates) < 2:
             print("Need at least 2 days of data for predictions")
@@ -35,11 +40,28 @@ class BalancePredictor:
         X_future = np.array(future_day_numbers).reshape(-1,1)
         predictions = self.model.predict(X_future)
 
+        #Get the current (last) balance
+        current_balance = balances[-1]
+
+        #calculate daily trend from the model
+        daily_trend = self.model.coef_[0]
+
+        # DEBUG: Print calculation details====================================================
+        print(f"DEBUG - Current balance: {current_balance}")
+        print(f"DEBUG - Daily trend: {daily_trend}")
+        print(f"DEBUG - Last balance: {balances[-1] if balances else 'EMPTY'}")
+
+        #Build predictions starting from the current balance
+        predictions = np.array([current_balance + (daily_trend * i) for i in range(days_ahead+1)])
+
+        # DEBUG: Print first few predictions=========================================================
+        print(f"DEBUG - First 3 predictions: {predictions[:3]}")
+
         #Convert Day Numbers Back to Actual Dates
         last_date = dates[-1]
 
         #generate actual calendar dates for the future
-        future_dates = [last_date + timedelta(days=i+1) for i in range(days_ahead)]
+        future_dates = [last_date + timedelta(days=i) for i in range(days_ahead+1)]
 
         return future_dates, predictions, dates, balances
 

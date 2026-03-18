@@ -48,8 +48,14 @@ def predictions():
     trend_info = None
 
     if result:
-        future_dates, predictions, hist_dates, hist_balances = result
+        future_dates, predictions_data, hist_dates, hist_balances = result
         trend_info = predictor.get_trend_info()
+
+        # DEBUG: Print what we're sending to the chart
+        print(f"CHART DEBUG - First future date: {future_dates[0]}")
+        print(f"CHART DEBUG - First prediction value: {predictions_data[0]}")
+        print(f"CHART DEBUG - Last hist date: {hist_dates[-1]}")
+        print(f"CHART DEBUG - Last hist balance: {hist_balances[-1]}")
 
         historical_trace = go.Scatter(
             x=hist_dates,
@@ -60,12 +66,15 @@ def predictions():
         )
 
         prediction_trace = go.Scatter(
-            x=future_dates,
-            y=predictions,
+            x=[date.isoformat() for date in future_dates],
+            y=predictions_data.tolist() if hasattr(predictions_data, 'tolist') else list(predictions_data),
             mode='lines',
             name='Predicted Balance',
-            line=dict(color='red', width=2, dash='dash')
+            line=dict(color='red', width=2, dash='dash'),
+            connectgaps=True
         )
+
+        print(f"PLOTLY DEBUG - Prediction Y values: {predictions_data[:3]}")
 
         data = [historical_trace, prediction_trace]
 
@@ -91,7 +100,7 @@ def analytics():
         go.Bar(
             x=['Income', 'Expenses'],
             y=[stats['total_income'], stats['total_expenses']],
-            marker=dict(color=['green', 'red']),
+            marker=dict(color=['rgba(0, 100, 0, 1)', 'rgba(139, 0, 0, 1)']),
             text=[f"${stats['total_income']:,.2f}", f"${stats['total_expenses']:,.2f}"],
             textposition='outside'
         )
