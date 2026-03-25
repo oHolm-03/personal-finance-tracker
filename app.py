@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+import numpy as np
 from src.tracker import FinanceTracker
 from src.predictor import BalancePredictor
 import plotly.graph_objs as go
@@ -50,12 +51,22 @@ def predictions():
     if result:
         future_dates, predictions_data, hist_dates, hist_balances = result
         trend_info = predictor.get_trend_info()
+        
+        # Convert predictions_data to list if it's numpy array
+        predictions_list = predictions_data.tolist() if hasattr(predictions_data, 'tolist') else list(predictions_data)
 
-        # DEBUG: Print what we're sending to the chart
-        print(f"CHART DEBUG - First future date: {future_dates[0]}")
-        print(f"CHART DEBUG - First prediction value: {predictions_data[0]}")
-        print(f"CHART DEBUG - Last hist date: {hist_dates[-1]}")
-        print(f"CHART DEBUG - Last hist balance: {hist_balances[-1]}")
+        #Calculate confidence interval
+        std_dev = np.std(hist_balances)
+
+        #Start with +-10% of std_dev, grow to +-30% by end of prediction period
+        confidence_lower = []
+        confidence_upper = []
+
+        for i, pred in enumerate(predictions_list):
+            uncertainty_factor = 0.1 + (0.2 * (i/len(predictions_list)))
+            margin = std_dev * uncertainty_factor
+            confidence_lower.append(pred-margin)
+            confidence_upper.append(pred+margin)
 
         historical_trace = go.Scatter(
             x=hist_dates,
@@ -66,17 +77,58 @@ def predictions():
         )
 
         prediction_trace = go.Scatter(
-            x=[date.isoformat() for date in future_dates],
-            y=predictions_data.tolist() if hasattr(predictions_data, 'tolist') else list(predictions_data),
+            x=future_dates,
+            y=predictions_list,
             mode='lines',
             name='Predicted Balance',
             line=dict(color='red', width=2, dash='dash'),
             connectgaps=True
         )
 
-        print(f"PLOTLY DEBUG - Prediction Y values: {predictions_data[:3]}")
+        #Upper confidence bound 
+        upper_bound_line = go.Scatter(
+            x=future_dates,
+            y=confidence_upper,
+            mode='lines',
+            name='Upper Confidence',
+            line=dict(color='rgba(255, 0, 0, 0.6)', width=1, dash='dot')
+        )
 
-        data = [historical_trace, prediction_trace]
+        #Lower confidence bound
+        lower_bound_line = go.Scatter(
+            x=future_dates,
+            y=confidence_lower,
+            mode='lines',
+            name='Lower Confidence',
+            line=dict(color='rgba(255, 0, 0, 0.6)', width=1, dash='dot')
+        )
+
+        #create lists for concat
+        future_dates_list = list(future_dates)
+
+        #Shaded fill for upper bound CI
+        fill_upper = go.Scatter(
+            x=future_dates_list +future_dates_list[::-1],
+            y=confidence_upper + predictions_list[::-1],
+            fill='toself',
+            fillcolor='rgba(255, 0, 0, 0.3)',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        )
+
+        #Shaded fill for lower bound CI
+        fill_lower = go.Scatter(
+            x=future_dates_list +future_dates_list[::-1],
+            y=predictions_list + confidence_lower[::-1],
+            fill='toself',
+            fillcolor='rgba(255, 0, 0, 0.3)',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        )
+
+        data = [fill_upper, fill_lower, historical_trace, upper_bound_line, prediction_trace, lower_bound_line]
 
         layout = go.Layout(
             title='Balance History and Predictions',
@@ -87,7 +139,6 @@ def predictions():
         )
 
         fig = go.Figure(data=data, layout=layout)
-
         chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
         return render_template('predictions.html', chart_json=chart_json, trend_info=trend_info, days=days)

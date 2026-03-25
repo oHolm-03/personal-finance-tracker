@@ -64,5 +64,11 @@
     "type": "expense",
     "amount": 45.0,
     "description": "Lyft"
+  },
+  {
+    "date": "2026-03-25 18:48:42",
+    "type": "expense",
+    "amount": 79.33,
+    "description": "Indy road trip gas"
   }
 ]

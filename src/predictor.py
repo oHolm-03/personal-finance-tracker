@@ -28,24 +28,18 @@ class BalancePredictor:
         #Train the model on historical data
         self.model.fit(X, y)
 
-        #Generate Future Predictions
-        #create day numbers for future days
-        future_day_numbers = range(len(dates), len(dates) + days_ahead)
-        #convert to numpy array in correct format
-        X_future = np.array(future_day_numbers).reshape(-1,1)
-        predictions = self.model.predict(X_future)
-
-        #Get the current (last) balance
+        #get the current balance and date
         current_balance = balances[-1]
+        last_date = dates[-1]
 
         #calculate daily trend from the model
         daily_trend = self.model.coef_[0]
 
-        #Convert Day Numbers Back to Actual Dates
-        last_date = dates[-1]
+        #Build predictions starting from current balance
+        predictions = np.array([current_balance + (daily_trend * i) for i in range(days_ahead + 1)])
 
-        #generate actual calendar dates for the future
-        future_dates = [last_date + timedelta(days=i) for i in range(days_ahead+1)]
+        #generate future dates, today as first point
+        future_dates = [last_date + timedelta(days=i) for i in range(days_ahead +1)]
 
         return future_dates, predictions, dates, balances
 
