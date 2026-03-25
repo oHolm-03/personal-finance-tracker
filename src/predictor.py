@@ -10,6 +10,7 @@ class BalancePredictor:
         self.model = None
 
         #MAIN PREDICTION METHOD
+    def predict_future_balance(self, days_ahead = 30):
         #get historical daily balances from the tracker
         dates, balances = self.tracker.get_daily_balances()
         
@@ -27,18 +28,18 @@ class BalancePredictor:
         #Train the model on historical data
         self.model.fit(X, y)
 
-        #Generate Future Predictions
-        #create day numbers for future days
-        future_day_numbers = range(len(dates), len(dates) + days_ahead)
-        #convert to numpy array in correct format
-        X_future = np.array(future_day_numbers).reshape(-1,1)
-        predictions = self.model.predict(X_future)
-
-        #Convert Day Numbers Back to Actual Dates
+        #get the current balance and date
+        current_balance = balances[-1]
         last_date = dates[-1]
 
-        #generate actual calendar dates for the future
-        future_dates = [last_date + timedelta(days=i+1) for i in range(days_ahead)]
+        #calculate daily trend from the model
+        daily_trend = self.model.coef_[0]
+
+        #Build predictions starting from current balance
+        predictions = np.array([current_balance + (daily_trend * i) for i in range(days_ahead + 1)])
+
+        #generate future dates, today as first point
+        future_dates = [last_date + timedelta(days=i) for i in range(days_ahead +1)]
 
         return future_dates, predictions, dates, balances
 
@@ -60,7 +61,7 @@ class BalancePredictor:
         monthly_change = daily_change *30
 
         return{
-            'Daily Change': daily_change,
-            'Trend Direction': trend_direction,
-            'Monthly Change': monthly_change
+            'daily_change': daily_change,
+            'trend_direction': trend_direction,
+            'monthly_change': monthly_change
         }

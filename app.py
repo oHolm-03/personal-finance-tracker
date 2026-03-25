@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+import numpy as np
 from src.tracker import FinanceTracker
 from src.predictor import BalancePredictor
 import plotly.graph_objs as go
@@ -48,8 +49,24 @@ def predictions():
     trend_info = None
 
     if result:
-        future_dates, predictions, hist_dates, hist_balances = result
+        future_dates, predictions_data, hist_dates, hist_balances = result
         trend_info = predictor.get_trend_info()
+        
+        # Convert predictions_data to list if it's numpy array
+        predictions_list = predictions_data.tolist() if hasattr(predictions_data, 'tolist') else list(predictions_data)
+
+        #Calculate confidence interval
+        std_dev = np.std(hist_balances)
+
+        #Start with +-10% of std_dev, grow to +-30% by end of prediction period
+        confidence_lower = []
+        confidence_upper = []
+
+        for i, pred in enumerate(predictions_list):
+            uncertainty_factor = 0.1 + (0.2 * (i/len(predictions_list)))
+            margin = std_dev * uncertainty_factor
+            confidence_lower.append(pred-margin)
+            confidence_upper.append(pred+margin)
 
         historical_trace = go.Scatter(
             x=hist_dates,
@@ -61,13 +78,57 @@ def predictions():
 
         prediction_trace = go.Scatter(
             x=future_dates,
-            y='predictions',
+            y=predictions_list,
             mode='lines',
             name='Predicted Balance',
-            line=dict(color='red', width=2, dash='dash')
+            line=dict(color='red', width=2, dash='dash'),
+            connectgaps=True
         )
 
-        data = [historical_trace, prediction_trace]
+        #Upper confidence bound 
+        upper_bound_line = go.Scatter(
+            x=future_dates,
+            y=confidence_upper,
+            mode='lines',
+            name='Upper Confidence',
+            line=dict(color='rgba(255, 0, 0, 0.6)', width=1, dash='dot')
+        )
+
+        #Lower confidence bound
+        lower_bound_line = go.Scatter(
+            x=future_dates,
+            y=confidence_lower,
+            mode='lines',
+            name='Lower Confidence',
+            line=dict(color='rgba(255, 0, 0, 0.6)', width=1, dash='dot')
+        )
+
+        #create lists for concat
+        future_dates_list = list(future_dates)
+
+        #Shaded fill for upper bound CI
+        fill_upper = go.Scatter(
+            x=future_dates_list +future_dates_list[::-1],
+            y=confidence_upper + predictions_list[::-1],
+            fill='toself',
+            fillcolor='rgba(255, 0, 0, 0.3)',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        )
+
+        #Shaded fill for lower bound CI
+        fill_lower = go.Scatter(
+            x=future_dates_list +future_dates_list[::-1],
+            y=predictions_list + confidence_lower[::-1],
+            fill='toself',
+            fillcolor='rgba(255, 0, 0, 0.3)',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        )
+
+        data = [fill_upper, fill_lower, historical_trace, upper_bound_line, prediction_trace, lower_bound_line]
 
         layout = go.Layout(
             title='Balance History and Predictions',
@@ -78,40 +139,50 @@ def predictions():
         )
 
         fig = go.Figure(data=data, layout=layout)
-
-        chat_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
         return render_template('predictions.html', chart_json=chart_json, trend_info=trend_info, days=days)
     
-    @app.route('/analytics')
-    def analytics():
-        stats = tracker.get_summary_stats()
+@app.route('/analytics')
+def analytics():
+    stats = tracker.get_summary_stats()
 
-        data = [
-            go.Bar(
-                x=['Income', 'Expenses'],
-                y=[stats['total_income'], stats['total_expenses']],
-                marker=dict(color=['green', 'red']),
-                text=[f"${stats['total_income']:,.2f}", f"${stats['total_expenses']:,.2f}"],
-                textposition='outside'
-            )
-        ]
-
-        layout = go.Layout(
-            title='Income vs Expenses',
-            yaxis=dict(title='Amount ($)'),
-            template='plotly_white'
+    data = [
+        go.Bar(
+            x=['Income', 'Expenses'],
+            y=[stats['total_income'], stats['total_expenses']],
+            marker=dict(color=['rgba(0, 100, 0, 1)', 'rgba(139, 0, 0, 1)']),
+            text=[f"${stats['total_income']:,.2f}", f"${stats['total_expenses']:,.2f}"],
+            textposition='outside'
         )
+    ]
 
-        fig = go.Figure(data=data, layout=layout)
-        chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    layout = go.Layout(
+        title='Income vs Expenses',
+        yaxis=dict(title='Amount ($)'),
+        template='plotly_white'
+    )
 
-        return render_template('analytics.html', chart_json=chart_json, stats=stats)
+    fig = go.Figure(data=data, layout=layout)
+    chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return render_template('analytics.html', chart_json=chart_json, stats=stats)
     
-    @app.route('/delete_transaction/<int:index>')
-    def delete_transaction(index):
-        if 0 <= index < len(tracker.transactions):
-            tracker.transactions.pop(index)
-            tracker.save_data()
+@app.route('/delete_transaction/<int:index>')
+def delete_transaction(index):
+    if 0 <= index < len(tracker.transactions):
+        tracker.transactions.pop(index)
+        tracker.save_data()
 
-            return redirect(url_for('index'))
+        return redirect(url_for('index'))
+    
+# Run the server
+if __name__ == '__main__':
+    print("\n" + "="*60)
+    print("Starting Personal Finance Tracker Web App")
+    print("="*60)
+    print("Open your browser and go to: http://localhost:5000")
+    print("Press CTRL+C to stop the server")
+    print("="*60 + "\n")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000)
